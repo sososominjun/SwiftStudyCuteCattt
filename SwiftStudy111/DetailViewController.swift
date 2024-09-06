@@ -1,24 +1,42 @@
+//
+//  DetailViewController.swift
+//  SwiftStudy111
+//
+//  Created by 소민준 on 9/6/24.
+//
+
 
 
 import UIKit
 
-class ViewController: UIViewController, CatViewModelOutput {
+class DetailViewController: UIViewController, CatViewModelOutput {
     
 
-    private enum Metrics {
-        static let inset: CGFloat = 4
-    }
     
     private let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .white
-        layout.minimumLineSpacing = Metrics.inset
-        layout.minimumInteritemSpacing = Metrics.inset
+        layout.minimumLineSpacing = .zero
+        layout.minimumInteritemSpacing = .zero
+        layout.scrollDirection = .horizontal
+        cv.isPagingEnabled = true
         return cv
     }()
     
-    private let viewModel = CatViewModel()
+    private let viewModel: CatViewModel
+    
+    private let index: Int
+    
+    init(viewModel: CatViewModel, index: Int) {
+        self.viewModel = viewModel
+        self.index = index
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -42,6 +60,9 @@ class ViewController: UIViewController, CatViewModelOutput {
         self.collectionView.reloadData()
         self.viewModel.attach(delegate: self)
         self.viewModel.load()
+        
+        self.collectionView.layoutIfNeeded()
+        self.collectionView.scrollToItem(at: IndexPath(item: self.index, section: 0), at: .centeredHorizontally, animated: false)
     }
     
     func loadComplete() {
@@ -51,33 +72,27 @@ class ViewController: UIViewController, CatViewModelOutput {
     }
     
     
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.viewModel.detach(delegate: self)
+    }
 
 
 }
 
-extension ViewController: UICollectionViewDelegateFlowLayout {
+extension DetailViewController: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        
-        let width = collectionView.frame.width
-        
-        let cellWidth = (width - 2 * Metrics.inset) / 3
-        return CGSize(width: cellWidth, height: cellWidth)
-        
+        return collectionView.frame.size
     }
     
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         self.viewModel.loadMoreIfNeeded(index: indexPath.item)
     }
-    
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let detailViewController = DetailViewController(viewModel: self.viewModel, index: indexPath.item)
-        self.present(detailViewController, animated: true, completion: nil)
-    }
 }
 
-extension ViewController: UICollectionViewDataSource {
+extension DetailViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return self.viewModel.data.count
     }
@@ -85,7 +100,7 @@ extension ViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! CatCell
         let data = self.viewModel.data[indexPath.item]
-        cell.setupData(urlString: data.url)
+        cell.setupData(urlString: data.url, detail: true)
         return cell
     }
     

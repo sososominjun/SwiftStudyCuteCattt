@@ -1,9 +1,3 @@
-//
-//  SceneDelegate.swift
-//  SwiftStudy111
-//
-//  Created by 소민준 on 9/6/24.
-//
 
 import UIKit
 
@@ -49,4 +43,3 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 
 }
-
